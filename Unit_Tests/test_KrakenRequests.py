@@ -23,7 +23,7 @@ class TestKrakenRequests(unittest.TestCase):
 
 
     def setUp(self):
-        load_dotenv(dotenv_path = "../User_Data/.env")
+        load_dotenv(dotenv_path = "../.env")
 
         self.test_key = os.getenv("test_key")
         self.test_secret = os.getenv("test_secret")
