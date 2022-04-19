@@ -6,7 +6,7 @@ from finta import TA
 from Source.BaseStrategy import BaseStrategy
 
 
-class test_strategy(BaseStrategy):
+class dmac_strategy(BaseStrategy):
     
     def __init__(self):
         BaseStrategy.__init__(self)
@@ -38,10 +38,10 @@ class test_strategy(BaseStrategy):
         dataframe["close"].plot(ax = ax1, color = "r", lw = 2)
         dataframe[["SMA_Fast", "SMA_Slow"]].plot(ax = ax1, lw = 2)
 
-        #df_buy = dataframe[dataframe["buy"] == 1]
-        #df_sell = dataframe[dataframe["sell"] == 1]
-        #ax1.plot(df_buy.index, df_buy, "^", color = "m")
-        #ax1.plot(df_sell.index, df_sell, "v", color = "k")
+        df_buy = dataframe.loc[dataframe["buy"] == 1, "SMA_Fast"]
+        df_sell = dataframe.loc[dataframe["sell"] == 1, "SMA_Fast"]
+        ax1.plot(df_buy.index, df_buy, "^", color = "m")
+        ax1.plot(df_sell.index, df_sell, "v", color = "k")
 
         plt.xlabel("Date")
         plt.ylabel("Price in USD")

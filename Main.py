@@ -1,6 +1,6 @@
 import questionary
 import fire
-import importlib
+import Source.Bot as bot
 
 from Source.Kraken import Kraken
 from os import listdir
@@ -40,20 +40,16 @@ def main():
         if strategy == strategy_list[-1]:
             continue
 
-        module = importlib.import_module(f"User_Strategies.{strategy}")
-        script = getattr(module, strategy)
-
         if option == main_options[0]:
-            script().run()
+            print("Paper Run")
         elif option == main_options[1]:
             all_pair_names = kraken.get_tradeable_usd_asset_names()
             pair = questionary.select("Select a pair to backtest:", choices = all_pair_names).ask()
+            timeframe = float(questionary.text("Enter timeframe:", default = "60", validate = validate_float).ask())
             capital = float(questionary.text("Enter initial capital:", default = "10000", validate = validate_float).ask())
+            plot = questionary.confirm("Plot Backtest Results?").ask()
 
-            strategy_script = script()
-            df = strategy_script.backtest(pair = pair, capital = capital, timeframe = 60)
-            if questionary.confirm("Plot Results?").ask():
-                strategy_script.plot_results(df, pair)
+            bot.backtest(strategy, pair, timeframe, capital, plot = plot)
 
     print("Exiting...")
 
@@ -66,7 +62,6 @@ def validate_float(text):
         return True
     except Exception:
         return "Enter a valid number!"
-
 
 
 if __name__ == '__main__':
