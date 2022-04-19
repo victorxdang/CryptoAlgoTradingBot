@@ -47,22 +47,32 @@ class Kraken():
         return list(self.get_tradeable_usd_assets()["altname"].index)
 
 
-    def get_ohlcv_data(self, timeframe: int) -> list:
+    def get_ohlcv_data(self, timeframe: int) -> dict:
         """
         Description:
             Gets the OHLCV data from server and parse it into a dataframe.
 
         Return:
-            Returns either a list of dataframes of ohlcv data for all pairs.
+            Returns a dictionary of dataframes of ohlcv data for all pairs.
         """
 
-        list_df = []
+        dict_df = {}
 
         for pair in self.get_tradeable_usd_asset_names():
             print(pair)
-            ohlc = self.kraken.get_ohlc_data(pair, interval = timeframe, ascending = True)
-            list_df.append(ohlc)
+            ohlc, _ = self.kraken.get_ohlc_data(pair, interval = timeframe, ascending = True)
+            dict_df[pair] = ohlc
 
-        return list_df
+        return dict_df
 
+    def get_ohlcv_data(self, pair: str, timeframe: int) -> pd.DataFrame:
+        """
+        Description:
+            Gets the OHLCV data from server and parse it into a dataframe.
 
+        Return:
+            Returns the dataframe of the given pair.
+        """
+        
+        ohlc, _ = self.kraken.get_ohlc_data(pair, interval = timeframe, ascending = True)
+        return ohlc

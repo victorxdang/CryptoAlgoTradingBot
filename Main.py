@@ -1,11 +1,15 @@
 import questionary
+import fire
 import importlib
 
+from Source.Kraken import Kraken
 from os import listdir
 from os.path import isfile
 
 
 def main():   
+
+    kraken = Kraken()
 
     print("\nWelcome to the Crypto Algorithmic Trading Bot!"
         "\nThis bot only works with the Kraken Exchange."
@@ -35,19 +39,35 @@ def main():
 
         if strategy == strategy_list[-1]:
             continue
-        elif option == main_options[0]:
-            module = importlib.import_module(f"User_Strategies.{strategy}")
-            script = getattr(module, strategy)
+
+        module = importlib.import_module(f"User_Strategies.{strategy}")
+        script = getattr(module, strategy)
+
+        if option == main_options[0]:
             script().run()
-        #elif option == main_options[1]:
-        #    Backtest()
+        elif option == main_options[1]:
+            all_pair_names = kraken.get_tradeable_usd_asset_names()
+            pair = questionary.select("Select a pair to backtest:", choices = all_pair_names).ask()
+            capital = float(questionary.text("Enter initial capital:", default = "10000", validate = validate_float).ask())
 
-
-        print(f"Selected Option: {option}")
-        print(f"Selected Strategy: {strategy}")
+            strategy_script = script()
+            df = strategy_script.backtest(pair = pair, capital = capital, timeframe = 60)
+            if questionary.confirm("Plot Results?").ask():
+                strategy_script.plot_results(df, pair)
 
     print("Exiting...")
+
     
+def validate_float(text):
+    try:
+        if len(text) > 0:
+            _ = float(text)
+
+        return True
+    except Exception:
+        return "Enter a valid number!"
+
+
 
 if __name__ == '__main__':
-    main()
+    fire.Fire(main)
