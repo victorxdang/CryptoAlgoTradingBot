@@ -87,3 +87,16 @@ X_scaler = StandardScaler().fit(X_train)
 # Transforming tge X_train Aand X_test DataFrame using the X_scaler
 X_train_scaled = X_scaler.transform(X_train)
 X_test_scaled = X_scaler.transform(X_test)
+
+
+# Using the SVC classifier model
+model = svm.SVC().fit(X_train_scaled, y_train)
+
+# Predicting the test set
+predictions = model.predict(X_train_scaled)
+
+
+# Classification Report
+SVM_report = classification_report(y_train, predictions)
+
+print(SVM_report)
