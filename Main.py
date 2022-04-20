@@ -32,20 +32,28 @@ def main():
             break
         
 
+        # find all of the strategy classes under the User_Strategies folder
         strategy_folder = "./User_Strategies/"
+
+        # add all of the strategy classes to the list with the ".py" extension removed
         strategy_list = [f[:-3] for f in listdir(strategy_folder) if isfile(f"{strategy_folder}{f}")]
         strategy_list.append("Return")
+
+        # ask the user to select the strategy to use
         strategy = questionary.select("Select the strategy to use:", strategy_list).ask()
 
-        if strategy == strategy_list[-1]:
+        if strategy == strategy_list[-1]: # Return
             continue
 
-        if option == main_options[0]:
+        if option == main_options[0]: # Paper run
             print("Paper Run")
-        elif option == main_options[1]:
+        elif option == main_options[1]: # Backtest
+            # get all of the tradeable crypto pairs to have the user select one
             all_pair_names = kraken.get_tradeable_usd_asset_names()
             pair = questionary.select("Select a pair to backtest:", choices = all_pair_names).ask()
             plot = questionary.confirm("Plot Backtest Results?").ask()
+
+            # start backtesting
             bot.backtest(strategy, pair, plot_results = plot)
 
     print("Exiting...")
