@@ -38,19 +38,22 @@ class dmac_strategy(BaseStrategy):
             Setting the buy and sell signals while applying machine learning.
         """
 
-        # calculate daily returns using closing price and pct_change function
+        # Calculate daily returns using closing price and pct_change function
         dataframe["actual_returns"] = dataframe["close"].pct_change()
 
-        # dropping NaN values from the DataFrame
+        # Calculate trading algorithm signals
+        dataframe["trading_signals"] = np.where(dataframe["SMA_Fast"] > dataframe["SMA_Slow"], 1.0, 0.0)
+
+        # Dropping NaN values from the DataFrame
         dataframe.dropna(inplace = True)
 
-        # when actual_returns are greater than 0, generate signal to buy crypto
+        # When actual_returns are greater than 0, generate signal to buy crypto
         dataframe.loc[(dataframe["actual_returns"] >= 0), "signals"] = 1.0
         dataframe.loc[(dataframe["actual_returns"] < 0), "signals"] = -1.0
 
-        dataframe["returns"] = dataframe["actual_returns"] * dataframe["signals"]
+        dataframe["returns"] = dataframe["actual_returns"] * dataframe["trading_signals"]
 
-        # sisaplying the data
+        # Displaying the data
         print(f"\nDataFrame Created For {pair}")
         print(dataframe)
 
@@ -67,7 +70,7 @@ class dmac_strategy(BaseStrategy):
         training_start = X.index.min()
 
         # Selecting the end of the training and setting the offset to 6 months
-        training_end = X.index.min() + DateOffset(months=6)
+        training_end = X.index.min() + DateOffset(months = 6)
 
 
         # Genereating the X_train and y_train DataFrames

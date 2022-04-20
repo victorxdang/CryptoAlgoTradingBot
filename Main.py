@@ -51,10 +51,11 @@ def main():
             # get all of the tradeable crypto pairs to have the user select one
             all_pair_names = kraken.get_tradeable_usd_asset_names()
             pair = questionary.select("Select a pair to backtest:", choices = all_pair_names).ask()
+            timeframe = int(questionary.text("Enter Timeframe:", default = "1440").ask())
             plot = questionary.confirm("Plot Backtest Results?").ask()
 
             # start backtesting
-            bot.backtest(strategy, pair, plot_results = plot)
+            bot.backtest(strategy, pair, timeframe, plot)
 
     print("Exiting...")
 
