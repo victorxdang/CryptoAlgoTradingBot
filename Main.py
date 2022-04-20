@@ -45,11 +45,8 @@ def main():
         elif option == main_options[1]:
             all_pair_names = kraken.get_tradeable_usd_asset_names()
             pair = questionary.select("Select a pair to backtest:", choices = all_pair_names).ask()
-            timeframe = int(questionary.text("Enter timeframe:", default = "1440").ask())
-            capital = float(questionary.text("Enter initial capital:", default = "10000").ask())
             plot = questionary.confirm("Plot Backtest Results?").ask()
-
-            bot.backtest(strategy, pair, timeframe, capital, plot_results = plot)
+            bot.backtest(strategy, pair, plot_results = plot)
 
     print("Exiting...")
 

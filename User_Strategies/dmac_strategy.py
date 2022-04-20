@@ -16,7 +16,7 @@ class dmac_strategy(BaseStrategy):
     def __init__(self):
         BaseStrategy.__init__(self)
 
-    def create_indicators(self, dataframe: pd.DataFrame, pair: str) -> pd.DataFrame:
+    def create_indicators(self, dataframe: pd.DataFrame, pair: str):
         """
         Description:
             Create the indicators for the strategy
@@ -32,7 +32,7 @@ class dmac_strategy(BaseStrategy):
 
         return dataframe
 
-    def set_signals(self, dataframe: pd.DataFrame, pair: str) -> pd.DataFrame:
+    def set_signals(self, dataframe: pd.DataFrame, pair: str):
         """
         Description:
             Setting the buy and sell signals while applying machine learning.
@@ -45,8 +45,10 @@ class dmac_strategy(BaseStrategy):
         dataframe.dropna(inplace = True)
 
         # when actual_returns are greater than 0, generate signal to buy crypto
-        dataframe.loc[(dataframe["actual_returns"] >= 0), "signal"] = 1.0
-        dataframe.loc[(dataframe["actual_returns"] < 0), "signal"] = -1.0
+        dataframe.loc[(dataframe["actual_returns"] >= 0), "signals"] = 1.0
+        dataframe.loc[(dataframe["actual_returns"] < 0), "signals"] = -1.0
+
+        dataframe["returns"] = dataframe["actual_returns"] * dataframe["signals"]
 
         # sisaplying the data
         print(f"\nDataFrame Created For {pair}")
@@ -59,13 +61,13 @@ class dmac_strategy(BaseStrategy):
         X = dataframe[["SMA_Fast", "SMA_Slow"]].shift().dropna().copy()
 
         # Creating tha target set by selecting the Signal column
-        y = dataframe["signal"]
+        y = dataframe["signals"]
 
         # Selecting the training start date
         training_start = X.index.min()
 
-        # Selecting the end of the training and setting the offset to 12 months
-        training_end = X.index.min() + DateOffset(months=3)
+        # Selecting the end of the training and setting the offset to 6 months
+        training_end = X.index.min() + DateOffset(months=6)
 
 
         # Genereating the X_train and y_train DataFrames
@@ -104,7 +106,12 @@ class dmac_strategy(BaseStrategy):
         print("\nConfusion Matrix:")
         print(confusion_report)
 
-        return dataframe
+        predictions_df = pd.DataFrame(index = X_test.index)
+        predictions_df["ml_predictions"] = predictions
+        predictions_df["ml_actual_returns"] = dataframe["actual_returns"]
+        predictions_df["ml_returns"] = predictions_df["ml_actual_returns"] * predictions_df["ml_predictions"]
+
+        return (dataframe, predictions_df)
 
     def plot_results(self, dataframe: pd.DataFrame, pair: str):
         """
@@ -117,8 +124,8 @@ class dmac_strategy(BaseStrategy):
         dataframe["close"].plot(ax = ax1, color = "r", lw = 2)
         dataframe[["SMA_Fast", "SMA_Slow"]].plot(ax = ax1, lw = 2)
 
-        df_buy = dataframe.loc[dataframe["signal"] == 1, "SMA_Fast"]
-        df_sell = dataframe.loc[dataframe["signal"] == -1, "SMA_Fast"]
+        df_buy = dataframe.loc[dataframe["signals"] == 1, "SMA_Fast"]
+        df_sell = dataframe.loc[dataframe["signals"] == -1, "SMA_Fast"]
         ax1.plot(df_buy.index, df_buy, "^", color = "m")
         ax1.plot(df_sell.index, df_sell, "v", color = "k")
 
