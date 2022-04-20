@@ -8,7 +8,7 @@ class BaseStrategy():
     def __init__(self):
         self.kraken = Kraken()
 
-    def set_data(self, pair: str, timeframe: int) -> pd.DataFrame:
+    def run(self):
         self.dataframe = self.kraken.get_ohlcv_data(pair, timeframe)
 
 
@@ -20,10 +20,10 @@ class BaseStrategy():
         # to be overwritten by strategy
         return dataframe
 
-    def set_buy_signals(self, dataframe: pd.DataFrame, pair: str) -> pd.DataFrame:
+    def set_signals(self, dataframe: pd.DataFrame, pair: str) -> pd.DataFrame:
         # to be overwritten by strategy
         return dataframe
 
-    def set_sell_signals(self, dataframe: pd.DataFrame, pair: str) -> pd.DataFrame:
+    def plot_results(self, dataframe: pd.DataFrame, pair: str):
         # to be overwritten by strategy
-        return dataframe
+        pass
