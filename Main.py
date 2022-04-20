@@ -45,23 +45,13 @@ def main():
         elif option == main_options[1]:
             all_pair_names = kraken.get_tradeable_usd_asset_names()
             pair = questionary.select("Select a pair to backtest:", choices = all_pair_names).ask()
-            timeframe = float(questionary.text("Enter timeframe:", default = "60", validate = validate_float).ask())
-            capital = float(questionary.text("Enter initial capital:", default = "10000", validate = validate_float).ask())
+            timeframe = int(questionary.text("Enter timeframe:", default = "1440").ask())
+            capital = float(questionary.text("Enter initial capital:", default = "10000").ask())
             plot = questionary.confirm("Plot Backtest Results?").ask()
 
-            bot.backtest(strategy, pair, timeframe, capital, plot = plot)
+            bot.backtest(strategy, pair, timeframe, capital, plot_results = plot)
 
     print("Exiting...")
-
-    
-def validate_float(text):
-    try:
-        if len(text) > 0:
-            _ = float(text)
-
-        return True
-    except Exception:
-        return "Enter a valid number!"
 
 
 if __name__ == '__main__':

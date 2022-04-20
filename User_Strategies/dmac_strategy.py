@@ -23,8 +23,8 @@ class dmac_strategy(BaseStrategy):
         """
 
         # SMA windows
-        fast = float(questionary.text("Enter Fast SMA Length:"))
-        slow = float(questionary.text("Enter Slow SMA Length:"))
+        fast = int(questionary.text("Enter Fast SMA Length:", default = "10").ask())
+        slow = int(questionary.text("Enter Slow SMA Length:", default = "50").ask())
 
         # instantiate indicators
         dataframe["SMA_Fast"] = TA.SMA(dataframe, fast)
@@ -42,23 +42,21 @@ class dmac_strategy(BaseStrategy):
         dataframe["actual_returns"] = dataframe["close"].pct_change()
 
         # dropping NaN values from the DataFrame
-        dataframe.dropna()
-
-        # initialize new signal
-        dataframe["signal"] = 0.0
+        dataframe.dropna(inplace = True)
 
         # when actual_returns are greater than 0, generate signal to buy crypto
         dataframe.loc[(dataframe["actual_returns"] >= 0), "signal"] = 1.0
         dataframe.loc[(dataframe["actual_returns"] < 0), "signal"] = -1.0
 
         # sisaplying the data
-        display(dataframe)
+        print(f"\nDataFrame Created For {pair}")
+        print(dataframe)
 
 
         # Scaling the Features using StandardScaler
 
         # Creating a X dataframe with the fast and slow columns
-        X = dataframe[["SMA_Fast", "SMA_Slow"]].shift().dropna()
+        X = dataframe[["SMA_Fast", "SMA_Slow"]].shift().dropna().copy()
 
         # Creating tha target set by selecting the Signal column
         y = dataframe["signal"]
@@ -67,19 +65,20 @@ class dmac_strategy(BaseStrategy):
         training_start = X.index.min()
 
         # Selecting the end of the training and setting the offset to 12 months
-        training_end = X.index.min() + DateOffset(months=12)
+        training_end = X.index.min() + DateOffset(months=3)
 
 
         # Genereating the X_train and y_train DataFrames
-        X_train, y_train = X.loc[training_start:training_end], y.loc[training_start:training_end]
+        X_train = X.loc[training_start:training_end]
+        y_train = y.loc[training_start:training_end]
 
         # Generating the X_test and y_test DataFrames
-        X_test, y_test = X.loc[training_end +
-                            DateOffset(hours=1):], y.loc[training_end+DateOffset(hours=1):]
-
+        X_test = X.loc[training_end + DateOffset(hours=1):]
+        y_test = y.loc[training_end + DateOffset(hours=1):]
 
         # Scaling and fitting the model
-        X_scaler = StandardScaler().fit(X_train)
+        scaler = StandardScaler()
+        X_scaler = scaler.fit(X_train)
 
         # Transforming tge X_train Aand X_test DataFrame using the X_scaler
         X_train_scaled = X_scaler.transform(X_train)
@@ -87,20 +86,23 @@ class dmac_strategy(BaseStrategy):
 
 
         # Using the SVC classifier model
-        model = svm.SVC().fit(X_train_scaled, y_train)
+        model = svm.SVC()
+        
+        # Fit the model using the training data
+        model.fit(X_train_scaled, y_train)
 
         # Predicting the test set
-        predictions = model.predict(X_train_scaled)
+        predictions = model.predict(X_test_scaled)
 
 
         # Classification Report and Confusion Matrix
-        SVM_report = classification_report(y_train, predictions)
-        confusion_matrix = confusion_matrix(y_train, predictions)
+        SVM_report = classification_report(y_test, predictions)
+        confusion_report = confusion_matrix(y_test, predictions)
 
         print("\nSVM Report:")
         print(SVM_report)
         print("\nConfusion Matrix:")
-        print(confusion_matrix)
+        print(confusion_report)
 
         return dataframe
 
@@ -115,8 +117,8 @@ class dmac_strategy(BaseStrategy):
         dataframe["close"].plot(ax = ax1, color = "r", lw = 2)
         dataframe[["SMA_Fast", "SMA_Slow"]].plot(ax = ax1, lw = 2)
 
-        df_buy = dataframe.loc[dataframe["buy"] == 1, "SMA_Fast"]
-        df_sell = dataframe.loc[dataframe["sell"] == 1, "SMA_Fast"]
+        df_buy = dataframe.loc[dataframe["signal"] == 1, "SMA_Fast"]
+        df_sell = dataframe.loc[dataframe["signal"] == -1, "SMA_Fast"]
         ax1.plot(df_buy.index, df_buy, "^", color = "m")
         ax1.plot(df_sell.index, df_sell, "v", color = "k")
 

@@ -1,3 +1,4 @@
+from matplotlib.pyplot import plot
 import pandas as pd
 import numpy as np
 
@@ -8,8 +9,22 @@ class BaseStrategy():
     def __init__(self):
         self.kraken = Kraken()
 
-    def run(self):
+    def run(self, pair: str, timeframe: int, plot_results: bool):
+
+        # get data from Kraken
         self.dataframe = self.kraken.get_ohlcv_data(pair, timeframe)
+
+        # initialize default values
+        self.dataframe["signal"] = 0.0
+        self.dataframe["stoploss"] = 0.0
+
+        # call creation of indicator and signals functions
+        self.dataframe = self.create_indicators(self.dataframe, pair)
+        self.dataframe = self.set_signals(self.dataframe, pair)
+
+        # plot results if user decided to do so
+        if plot_results:
+            self.plot_results(self.dataframe, pair)
 
 
     """

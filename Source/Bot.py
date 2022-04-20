@@ -8,7 +8,7 @@ def run():
 
     print(f"Running Live/Paper Trading")
 
-def backtest(strategy_name: str, pair: str, timeframe: int, capital: float = 10000, stake_amount: float = 0.9, trade_fee = 0.0026, plot = True):
+def backtest(strategy_name: str, pair: str, timeframe: int, capital: float = 10000, stake_amount: float = 0.9, trade_fee = 0.0026, plot_results = True):
     """
     Description:
         To be used for backtesting.
@@ -18,15 +18,9 @@ def backtest(strategy_name: str, pair: str, timeframe: int, capital: float = 100
     script = getattr(module, strategy_name)
     strategy = script()
 
-    strategy.set_data(pair, timeframe)
+    strategy.run(pair, timeframe, plot_results)
     df = strategy.dataframe
-    df["buy"] = 0
-    df["sell"] = 0
-    df["stoploss"] = 0
 
-    df = strategy.create_indicators(df, pair)
-    df = strategy.set_buy_signals(df, pair)
-    df = strategy.set_sell_signals(df, pair)
 
     # last buy timestamp, keep track to retrieve this row when a sell happens.
     # reset to None when sell happens
@@ -55,24 +49,20 @@ def backtest(strategy_name: str, pair: str, timeframe: int, capital: float = 100
     stoploss_amount = 0
 
     output = []
-    output.append(f"- Start of Backtesting for {pair} -")
+    output.append(f"\n- Start of Backtesting for {pair} -")
 
     for timestamp in df.index:
         row = df.loc[timestamp]
         stoploss_hit = row["low"] < row["stoploss"]
 
-        if row['buy'] == row['sell']:
-            # both buy and sell signals are present, ignore
-            rejected_signals += 1
-
-        elif row['buy'] == 1 and last_buy_timestamp is None:
+        if row["signal"] == 1 and last_buy_timestamp is None:
             last_buy_timestamp = timestamp
             buy_amount = (total_capital * stake_amount)
             fee_amount = buy_amount * trade_fee
             last_buy_stake_amount = buy_amount - fee_amount
             last_buy_coin_amount = last_buy_stake_amount / row["close"]
             total_capital -= last_buy_stake_amount
-        elif (row["sell"] == 1 and last_buy_timestamp is not None) or stoploss_hit:
+        elif (row["signal"] == -1 and last_buy_timestamp is not None) or stoploss_hit:
             price = row["close"]
             if stoploss_hit:
                 stoploss_amount += 1
@@ -139,7 +129,3 @@ def backtest(strategy_name: str, pair: str, timeframe: int, capital: float = 100
         output.append(f"\nNo Trades Made")
 
     print(f"{''.join(output)}\n")
-
-
-    if plot:
-        strategy.plot_results(df, pair)
