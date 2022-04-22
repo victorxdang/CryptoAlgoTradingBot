@@ -1,3 +1,6 @@
+from sys import displayhook
+from tkinter.tix import DisplayStyle
+from sklearn.naive_bayes import ComplementNB
 import requests
 import urllib.parse
 import hashlib
@@ -6,6 +9,7 @@ import pandas as pd
 import numpy as np
 from pandas.tseries.offsets import DateOffset
 from sklearn import svm
+from sklearn import naive_bayes
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 import krakenex
@@ -13,12 +17,6 @@ from pykrakenapi import KrakenAPI
 
 api = krakenex.API()
 k = KrakenAPI(api, tier="None", crl_sleep=.5)
-
-# Create a for loop to extract the tickers(pairs)
-# By asking which crypto they wanna use
-# then print the ohlc
-usd_pairs = pairs.loc[pairs["quote"] == "ZUSD"]
-usd_pairs.T
 
 pairs1 = input("Which crypto?")
 
@@ -32,10 +30,10 @@ long_window = int(input("Slow SMA"))
 
 
 ohlc[0]['Fast SMA'] = ohlc[0]['close'].rolling(short_window).mean()
-display(ohlc[0].tail())
+displayhook(ohlc[0].tail())
 
 ohlc[0]['Slow SMA'] = ohlc[0]['close'].rolling(long_window).mean()
-display(ohlc[0].tail())
+# DisplayStyle(ohlc[0].tail())
 
 
 # Data Training and Testing DataSets
@@ -55,7 +53,7 @@ ohlc.loc[(ohlc["Actual Returns"] >= 0), "Signal"] = 1.0
 ohlc.loc[(ohlc["Actual Returns"] < 0), "Signal"] = -1.0
 
 # Disaplying the data
-display(ohlc)
+# display(ohlc)
 
 
 # Scaling the Features using StandardScaler
@@ -100,3 +98,14 @@ predictions = model.predict(X_train_scaled)
 SVM_report = classification_report(y_train, predictions)
 
 print(SVM_report)
+
+
+# Another strategy would be the Naive Bayes Classifier
+
+model = naive_bayes.ComplementNB().fit(X_train, y_train)
+
+predictions = model.predict(X_train)
+
+naive_bayes_report = classification_report(y_train, predictions)
+
+print(naive_bayes_report)
