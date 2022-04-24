@@ -5,6 +5,8 @@ import questionary
 
 from pandas.tseries.offsets import DateOffset
 from sklearn import svm
+from sklearn import naive_bayes
+from sklearn.naive_bayes import ComplementNB
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix
 from finta import TA
@@ -90,27 +92,39 @@ class dmac_strategy(BaseStrategy):
         X_test_scaled = X_scaler.transform(X_test)
 
 
-        # Using the SVC classifier model
-        model = svm.SVC()
+        # Using the Support Vector Classifier model
+        svc_model = svm.SVC()
         
         # Fit the model using the training data
-        model.fit(X_train_scaled, y_train)
+        svc_model.fit(X_train_scaled, y_train)
 
         # Predicting the test set
-        predictions = model.predict(X_test_scaled)
+        svc_predictions = svc_model.predict(X_test_scaled)
 
 
         # Classification Report and Confusion Matrix
-        SVM_report = classification_report(y_test, predictions)
-        confusion_report = confusion_matrix(y_test, predictions)
+        SVM_report = classification_report(y_test, svc_predictions)
+        SVM_confusion_report = confusion_matrix(y_test, svc_predictions)
 
-        print("\nSVM Report:")
+        print("\nSVC Report:")
         print(SVM_report)
-        print("\nConfusion Matrix:")
-        print(confusion_report)
+        print("\nSVC Confusion Matrix:")
+        print(SVM_confusion_report)
+
+        # Naive Bayes Classifier
+        nb_model = naive_bayes.ComplementNB().fit(X_train, y_train)
+        nb_predictions = nb_model.predict(X_test)
+        nb_report = classification_report(y_test, nb_predictions)
+        nb_confusion_report = confusion_matrix(y_test, nb_predictions)
+
+        print("\nNaive Bayes Report:")
+        print(nb_report)
+        print("\nNaive Bayes Confusion Matrix:")
+        print(nb_confusion_report)
+
 
         predictions_df = pd.DataFrame(index = X_test.index)
-        predictions_df["ml_predictions"] = predictions
+        predictions_df["ml_predictions"] = svc_predictions
         predictions_df["ml_actual_returns"] = dataframe["actual_returns"]
         predictions_df["ml_returns"] = predictions_df["ml_actual_returns"] * predictions_df["ml_predictions"]
 
